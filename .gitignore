@@ -1,0 +1,4 @@
+## Ignore all build results except the .hex file
+
+build/*
+!build/Sandtris.ino.hex
