@@ -14,12 +14,12 @@ void loop()
 {
     if (gb.update())
     {
-        gb.display.println(F("Hello Sandtris!"));
+        // ticks every second
+        if (gb.frameCount % 20 == 0)
+        {
+        }
 
-        int count;
-
-        count = gb.frameCount;
-
-        gb.display.println(count);
+        gb.display.drawRect(2, 2, 24, 44);
+        gb.display.drawRect(3, 3, 22, 42);
     }
 }
