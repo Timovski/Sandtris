@@ -18,6 +18,25 @@ void setup()
 	gb.battery.show = false;
 }
 
+struct TetriminoPixel
+{
+	int x;
+	int y;
+	bool live = false;
+
+	TetriminoPixel()
+	{
+	}
+
+	~TetriminoPixel()
+	{
+	}
+
+	bool getBar()
+	{
+	}
+};
+
 struct FieldOfPlay
 {
 	bool field_of_play[12][22] = {{false}};
@@ -61,6 +80,134 @@ struct FieldOfPlay
 	}
 } fp;
 
+struct TetriminoMap
+{
+	TetriminoPixel pixels[4] = {TetriminoPixel(), TetriminoPixel(), TetriminoPixel(), TetriminoPixel()};
+
+	bool tetrimino_map[12][22] = {{false}};
+
+	TetriminoMap()
+	{
+		pixels[0].x = 5;
+		pixels[0].y = 1;
+		pixels[0].live = true;
+
+		pixels[1].x = 6;
+		pixels[1].y = 1;
+		pixels[1].live = true;
+
+		pixels[2].x = 7;
+		pixels[2].y = 1;
+		pixels[2].live = true;
+
+		pixels[3].x = 6;
+		pixels[3].y = 2;
+		pixels[3].live = true;
+
+		tetrimino_map[5][1] = true;
+		tetrimino_map[6][1] = true;
+		tetrimino_map[7][1] = true;
+		tetrimino_map[6][2] = true;
+	}
+
+	~TetriminoMap()
+	{
+	}
+
+	void move_down()
+	{
+		auto any_live = false;
+
+		for (auto &pixel : pixels)
+		{
+			if (pixel.live)
+			{
+				auto i = 0;
+				do
+				{
+					i++;
+					// if the pixel below is pixel
+					if (tetrimino_map[pixel.x][pixel.y + i])
+						continue;
+
+					// if the pixel below is map
+					if (fp.field_of_play[pixel.x][pixel.y + i])
+					{
+						// make pixel part of map
+						fp.field_of_play[pixel.x][pixel.y] = true;
+
+						// remove from live pixels
+						pixel.live = false;
+					}
+					else
+						any_live = true;
+
+					break;
+				} while (true);
+			}
+		}
+
+		if (!any_live)
+		{
+			pixels[0].x = 5;
+			pixels[0].y = 1;
+			pixels[0].live = true;
+
+			pixels[1].x = 6;
+			pixels[1].y = 1;
+			pixels[1].live = true;
+
+			pixels[2].x = 7;
+			pixels[2].y = 1;
+			pixels[2].live = true;
+
+			pixels[3].x = 6;
+			pixels[3].y = 2;
+			pixels[3].live = true;
+
+			tetrimino_map[5][1] = true;
+			tetrimino_map[6][1] = true;
+			tetrimino_map[7][1] = true;
+			tetrimino_map[6][2] = true;
+		}
+
+		for (auto &pixel : pixels)
+		{
+			tetrimino_map[pixel.x][pixel.y] = false;
+		}
+
+		for (auto &pixel : pixels)
+		{
+			if (pixel.live)
+			{
+				pixel.y++;
+			}
+		}
+
+		for (auto &pixel : pixels)
+		{
+			if (pixel.live)
+			{
+				tetrimino_map[pixel.x][pixel.y] = true;
+			}
+		}
+	}
+
+	void draw()
+	{
+		for (int x = 0; x < 12; x++)
+		{
+			for (int y = 0; y < 22; y++)
+			{
+				if (tetrimino_map[x][y])
+				{
+					draw_pixel(x, y);
+				}
+			}
+		}
+	}
+} tm;
+
 enum TetriminoShape
 {
 	I,
@@ -71,25 +218,6 @@ enum TetriminoShape
 	S,
 	Z
 } ts;
-
-struct TetriminoPixel
-{
-	int x;
-	int y;
-	bool live = false;
-
-	TetriminoPixel()
-	{
-	}
-
-	~TetriminoPixel()
-	{
-	}
-
-	bool getBar()
-	{
-	}
-};
 
 struct Tetrimino
 {
@@ -107,6 +235,7 @@ struct Tetrimino
 	{
 		int tetrimino_type_number = rand() % 7;
 		ts = static_cast<TetriminoShape>(tetrimino_type_number);
+		ts = T;
 
 		int p0x, p0y,
 			p1x, p1y,
@@ -184,22 +313,25 @@ struct Tetrimino
 
 		for (int i = 0; i < 4; i++)
 		{
-			if (pixels[i].live)
+			//TetriminoPixel *pixel = &pixels[i];
+			TetriminoPixel &pixel = pixels[i];
+
+			if (pixel.live)
 			{
 				any_live = true;
 
 				// if the pixel below is map
-				if (fp.field_of_play[pixels[i].x][pixels[i].y + 1])
+				if (fp.field_of_play[pixel.x][pixel.y + 1])
 				{
 					// make part of map
-					fp.field_of_play[pixels[i].x][pixels[i].y] = true;
+					fp.field_of_play[pixel.x][pixel.y] = true;
 
 					// remove from live pixels
-					pixels[i].live = false;
+					pixel.live = false;
 				}
 				else
 				{
-					pixels[i].y++;
+					pixel.y++;
 				}
 			}
 		}
@@ -229,11 +361,11 @@ void loop()
 		// ticks every second
 		if (gb.frameCount % 20 == 0)
 		{
-			t.move_down();
+			tm.move_down();
 		}
 
-		t.move_down();
-		t.draw();
+		//	t.move_down();
+		tm.draw();
 		fp.draw();
 	}
 }
