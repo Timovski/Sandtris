@@ -23,6 +23,7 @@ struct TetriminoPixel
 	int x;
 	int y;
 	bool live = false;
+	bool checked = false;
 
 	TetriminoPixel()
 	{
@@ -114,36 +115,46 @@ struct TetriminoMap
 	{
 	}
 
+	TetriminoPixel &get_pixel(int x, int y)
+	{
+		for (auto &pixel : pixels)
+			if (pixel.x == x && pixel.y == y)
+				return pixel;
+	}
+
+	bool check_pixel(TetriminoPixel &pixel)
+	{
+		// if the pixel below is pixel
+		if (tetrimino_map[pixel.x][pixel.y + 1])
+			check_pixel(get_pixel(pixel.x, pixel.y + 1));
+
+		// if the pixel below is map
+		if (fp.field_of_play[pixel.x][pixel.y + 1])
+		{
+			// make pixel part of map
+			fp.field_of_play[pixel.x][pixel.y] = true;
+
+			// remove from live pixels
+			pixel.live = false;
+		}
+
+		pixel.checked = true;
+
+		return pixel.live;
+	}
+
 	void move_down()
 	{
 		auto any_live = false;
 
 		for (auto &pixel : pixels)
+			pixel.checked = false;
+
+		for (auto &pixel : pixels)
 		{
-			if (pixel.live)
+			if (pixel.live && !pixel.checked)
 			{
-				auto i = 0;
-				do
-				{
-					i++;
-					// if the pixel below is pixel
-					if (tetrimino_map[pixel.x][pixel.y + i])
-						continue;
-
-					// if the pixel below is map
-					if (fp.field_of_play[pixel.x][pixel.y + i])
-					{
-						// make pixel part of map
-						fp.field_of_play[pixel.x][pixel.y] = true;
-
-						// remove from live pixels
-						pixel.live = false;
-					}
-					else
-						any_live = true;
-
-					break;
-				} while (true);
+				any_live = check_pixel(pixel) ? true : any_live;
 			}
 		}
 
